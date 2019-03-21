@@ -3,6 +3,11 @@ import { Row, Col, Card, CardHeader, CardTitle, CardBody } from "reactstrap";
 import FormInputs from "components/FormInputs/FormInputs.jsx";
 import Button from "components/CustomButton/CustomButton.jsx";
 import { Form } from "react-bootstrap";
+import getWeb3 from "../../utils/getWeb3";
+import SimpleStorageContract from "../../contracts/SimpleStorage.json";
+import ipfs from "../../utils/ipfs";
+import NodeRSA from "../../utils/rsa";
+import md5 from "../../utils/md5";
 
 
 class CertificateGeneration extends React.Component {
@@ -22,6 +27,36 @@ class CertificateGeneration extends React.Component {
         fileType: '',
         fileExt: ''
     }
+    componentDidMount = async ()=>
+    {
+        try {
+            //   // Get network provider and web3 instance.
+               const web3 = await getWeb3();
+                console.log('idhar hich hai apun');
+            //   // Use web3 to get the user's accounts.
+               const accounts = await web3.eth.getAccounts();
+                console.log(accounts)
+              const networkId = await web3.eth.net.getId();
+              console.log(networkId);
+               const deployedNetwork = SimpleStorageContract.networks[networkId];
+              const instance = new web3.eth.Contract(
+                 SimpleStorageContract.abi,
+                 deployedNetwork && deployedNetwork.address,
+              );
+              
+            //   // Set web3, accounts, and contract to the state, and then proceed with an
+            //   // example of interacting with the contract's methods.
+               this.setState({ web3, accounts, contract: instance },this.checkKey);
+               
+              //  
+             } catch (error) {
+            //   // Catch any errors for any of the above operations.
+            alert(
+                `Failed to load web3, accounts, or contract. Check console for details.`,
+              );
+            console.log('called');
+            }
+    };
 
     captureFile = (event) => {
         event.stopPropagation()
@@ -45,73 +80,161 @@ class CertificateGeneration extends React.Component {
         const buffer = await Buffer.from(reader.result);
         //set this buffer -using es6 syntax
         this.setState({ buffer });
+        
     };
 
     onSubmit = async (event) => {
         event.preventDefault();
+        const {accounts,contract} = this.state;
+        var hash = md5(this.state.buffer);
+        console.log(hash);
+        var key = new NodeRSA();
+        key.importKey(this.state.issuerPrivateKey,'private');
 
-
+        var digitalSignature = key.encryptPrivate(hash,'base64','utf8');
+        console.log("ddd"+digitalSignature);
+        //key.importKey('-----BEGIN PUBLIC KEY-----MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALp+eZTC0q9CqLYCU1z3uOpWjbINFyORAsU7HccJy1ln/cH1+6JLuxrF85X9THyHp0cNLEeB8O8shBADi9Ig96ECAwEAAQ==-----END PUBLIC KEY-----','public')
+        //var has = key.decryptPublic(digitalSignature, 'utf8');
+        //console.log(has);
+        await ipfs.add(this.state.buffer,(err,ipfsHash)=>{
+            console.log(ipfsHash);
+            const path =  "http://ipfs.io/ipfs/"+ipfsHash[0].path;
+            console.log(path);
+            this.setState({path : ipfsHash[0].path});
+         contract.methods.storeDigitalSignature(this.state.path,digitalSignature).send({from:accounts[0]});
+        })
+        
+        
     };
+    checkKey = async() => {
+        const {accounts,contract} = this.state;
+        const keyStatus = await contract.methods.checkPublicKey().call();
+        this.setState({keyStatus:keyStatus})
+        console.log(keyStatus);
+        
+            
+        
+    }
+    onSubmitGenerate = async(event) => {
+        event.preventDefault();
+        const {accounts,contract} = this.state;
+        if(this.state.keyStatus == false)
+        {
+            var keypair = new NodeRSA({b:512});
+            this.setState({privateKey : keypair.exportKey('private')});
+            console.log(this.state.privateKey);
+            console.log(keypair.exportKey('public'));
+            await contract.methods.addPublicKey(keypair.exportKey('public')).send({from:accounts[0]});
+            
 
+        }
+        
+
+    }
+    getReceiversAddress = async(event)=>{
+        event.preventDefault();
+        this.setState({receiverAddress : event.target.value});
+        console.log(this.state.receiverAddress);
+    }
+    getIssuerPrivateKey =  async(event)=>
+    {
+        event.preventDefault();
+        this.setState({issuerPrivateKey: event.target.value});
+        console.log(this.state.issuerPrivateKey);
+
+    }
 
     render() {
-        return (
-            <div className="content">
-                <Row>
-                    <Col xs={12}>
-                        <Card>
-                            <CardHeader><CardTitle>Generate</CardTitle></CardHeader>
-                            <CardBody>
+        if(!this.state.keyStatus)
+        {
+            return (
+                <div className="content">
+                    <Row>
+                        <Col xs={12}>
+                        
+                            <Card>
+                                <CardHeader><CardTitle>Generate</CardTitle></CardHeader>
+                                <CardBody>
+                                    <h1>You haven't Generated a KeyPair yet</h1>
+                                    <Form onSubmit={this.onSubmitGenerate}>
+                                        <Button type='submit' color='primary' round>Generate keypair</Button>
+                                    </Form>
+                                    <h1>{this.state.privateKey}</h1>
+                                </CardBody>
+                            </Card>
+                        </Col>
+                    </Row>
+                </div >
+                
+            );
 
-                                <Form onSubmit={this.onSubmit}>
-                                    {/* add all the code inside onSubmit */}
-                                    <div>
-                                        <label htmlFor="file-input" className="btn btn-info btn-md">
-                                            <div style={{ textTransform: 'none' }}>
-                                                {this.state.fileName}
-                                            </div>
-
-                                        </label>
-                                        <input id="file-input" type="file" style={{ display: 'none' }} onChange={this.captureFile} />
-                                    </div>
-                                    <br />
-                                    <FormInputs
-                                        ncols={["col-md-6 pr-1", "col-md-6 pl-1"]}
-                                        proprieties={[
-                                            {
-                                                label: "Receivers Address",
-                                                inputProps: {
-                                                    type: "textarea",
-                                                    defaultValue:
-                                                        "",
-                                                    placeholder: "Enter Receivers Address"
-                                                }
-                                            },
-                                            {
-                                                label: "Issuers Private Key",
-                                                inputProps: {
-                                                    type: "textarea",
-                                                    defaultValue:
-                                                        "",
-                                                    placeholder: "Enter Issuers Private Key"
-                                                }
-                                            }
-                                        ]}
-                                    />
-
-                                    <Row>
-                                        <div className="update ml-auto mr-auto">
-                                            <Button type="submit" color="primary" round>Generate Certificate</Button>
+        }
+        else
+        {
+            return (
+                <div className="content">
+                    <Row>
+                        <Col xs={12}>
+                        
+                            <Card>
+                                <CardHeader><CardTitle>Generate</CardTitle></CardHeader>
+                                <CardBody>
+    
+                                    <Form onSubmit={this.onSubmit}>
+                                        {/* add all the code inside onSubmit */}
+                                        <div>
+                                            <label htmlFor="file-input" className="btn btn-info btn-md">
+                                                <div style={{ textTransform: 'none' }}>
+                                                    {this.state.fileName}
+                                                </div>
+    
+                                            </label>
+                                            <input id="file-input" type="file" style={{ display: 'none' }} onChange={this.captureFile} />
                                         </div>
-                                    </Row>
-                                </Form>
+                                        <br />
+                                        <FormInputs
+                                            ncols={["col-md-6 pr-1", "col-md-6 pl-1"]}
+                                            proprieties={[
+                                                {
+                                                    label: "Receivers Address",
+                                                    inputProps: {
+                                                        type: "textarea",
+                                                        defaultValue:
+                                                            "",
+                                                        placeholder: "Enter Receivers Address",
+                                                        onChange : this.getReceiversAddress
+                                                    }
+                                                },
+                                                {
+                                                    label: "Issuers Private Key",
+                                                    inputProps: {
+                                                        type: "textarea",
+                                                        defaultValue:
+                                                            "",
+                                                        placeholder: "Enter Issuers Private Key",
+                                                        onChange : this.getIssuerPrivateKey
+                                                    }
+                                                }
+                                            ]} 
+                                        />
+    
+                                        <Row>
+                                            <div className="update ml-auto mr-auto">
+                                                <Button type="submit" color="primary" round>Generate Certificate</Button>
+                                            </div>
+                                        </Row>
+                                    </Form>
+    
+                                </CardBody>
+                            </Card>
+                        </Col>
+                    </Row>
+                </div >
+                
+            );
 
-                            </CardBody>
-                        </Card>
-                    </Col>
-                </Row>
-            </div >
-        );
+        }
+        
     }
 }
 

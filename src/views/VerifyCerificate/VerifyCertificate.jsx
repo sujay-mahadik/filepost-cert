@@ -3,7 +3,7 @@ import { Row, Col, Card, CardHeader, CardTitle, CardBody } from "reactstrap";
 import FormInputs from "components/FormInputs/FormInputs.jsx";
 import Button from "components/CustomButton/CustomButton.jsx";
 import { Form } from "react-bootstrap";
-
+import ipfs from "../../utils/ipfs";
 
 class CertificateVerification extends React.Component {
     state = {
