@@ -27,6 +27,16 @@ class CertificateGeneration extends React.Component {
         fileType: '',
         fileExt: ''
     }
+    constructor(props){
+        super(props);
+        
+        this.captureFile=this.captureFile.bind(this);
+        this.onSubmit=this.onSubmit.bind(this);
+        this.onSubmitGenerate=this.onSubmitGenerate.bind(this);
+        this.checkKey=this.checkKey.bind(this);
+        this.getIssuerPrivateKey=this.getIssuerPrivateKey.bind(this);
+        this.getReceiversAddress=this.getReceiversAddress.bind(this);
+    }
     componentDidMount = async ()=>
     {
         try {
@@ -80,6 +90,7 @@ class CertificateGeneration extends React.Component {
         const buffer = await Buffer.from(reader.result);
         //set this buffer -using es6 syntax
         this.setState({ buffer });
+        console.log(this.state.buffer.toString());
         
     };
 
@@ -118,7 +129,7 @@ class CertificateGeneration extends React.Component {
     onSubmitGenerate = async(event) => {
         event.preventDefault();
         const {accounts,contract} = this.state;
-        if(this.state.keyStatus == false)
+        if(this.state.keyStatus === false)
         {
             var keypair = new NodeRSA({b:512});
             this.setState({privateKey : keypair.exportKey('private')});
@@ -145,31 +156,7 @@ class CertificateGeneration extends React.Component {
     }
 
     render() {
-        if(!this.state.keyStatus)
-        {
-            return (
-                <div className="content">
-                    <Row>
-                        <Col xs={12}>
-                        
-                            <Card>
-                                <CardHeader><CardTitle>Generate</CardTitle></CardHeader>
-                                <CardBody>
-                                    <h1>You haven't Generated a KeyPair yet</h1>
-                                    <Form onSubmit={this.onSubmitGenerate}>
-                                        <Button type='submit' color='primary' round>Generate keypair</Button>
-                                    </Form>
-                                    <h1>{this.state.privateKey}</h1>
-                                </CardBody>
-                            </Card>
-                        </Col>
-                    </Row>
-                </div >
-                
-            );
-
-        }
-        else
+        if(this.state.keyStatus)
         {
             return (
                 <div className="content">
@@ -230,6 +217,32 @@ class CertificateGeneration extends React.Component {
                         </Col>
                     </Row>
                 </div >
+                
+                
+            );
+
+        }
+        else
+        {
+            return (
+                <div className="content">
+                    <Row>
+                        <Col xs={12}>
+                        
+                            <Card>
+                                <CardHeader><CardTitle>Generate</CardTitle></CardHeader>
+                                <CardBody>
+                                    <h1>You haven't Generated a KeyPair yet</h1>
+                                    <Form onSubmit={this.onSubmitGenerate}>
+                                        <Button type='submit' color='primary' round>Generate keypair</Button>
+                                    </Form>
+                                    <h1>{this.state.privateKey}</h1>
+                                </CardBody>
+                            </Card>
+                        </Col>
+                    </Row>
+                </div >
+                
                 
             );
 
