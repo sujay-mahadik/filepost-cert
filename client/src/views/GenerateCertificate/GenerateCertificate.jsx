@@ -112,7 +112,7 @@ class CertificateGeneration extends React.Component {
             const path =  "http://ipfs.io/ipfs/"+ipfsHash[0].path;
             console.log(path);
             this.setState({path : ipfsHash[0].path});
-         contract.methods.storeDigitalSignature(this.state.path,digitalSignature).send({from:accounts[0]});
+            contract.methods.addData(this.state.path,digitalSignature,this.state.receiverAddress).send({from:accounts[0]});
         })
         
         
