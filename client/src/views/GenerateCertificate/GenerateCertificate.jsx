@@ -53,7 +53,7 @@ class CertificateGeneration extends React.Component {
                  SimpleStorageContract.abi,
                  deployedNetwork && deployedNetwork.address,
               );
-              
+              console.log(accounts[0]);
             //   // Set web3, accounts, and contract to the state, and then proceed with an
             //   // example of interacting with the contract's methods.
                this.setState({ web3, accounts, contract: instance },this.checkKey);
@@ -90,7 +90,7 @@ class CertificateGeneration extends React.Component {
         const buffer = await Buffer.from(reader.result);
         //set this buffer -using es6 syntax
         this.setState({ buffer });
-        console.log(this.state.buffer.toString());
+        //console.log(this.state.buffer.toString());
         
     };
 
@@ -107,19 +107,25 @@ class CertificateGeneration extends React.Component {
         //key.importKey('-----BEGIN PUBLIC KEY-----MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALp+eZTC0q9CqLYCU1z3uOpWjbINFyORAsU7HccJy1ln/cH1+6JLuxrF85X9THyHp0cNLEeB8O8shBADi9Ig96ECAwEAAQ==-----END PUBLIC KEY-----','public')
         //var has = key.decryptPublic(digitalSignature, 'utf8');
         //console.log(has);
+        var data ;
+             contract.methods.getLinks(accounts[0]).call().then(res => {
+                 console.log(res)
+             });
+           console.log(data);
         await ipfs.add(this.state.buffer,(err,ipfsHash)=>{
             console.log(ipfsHash);
             const path =  "http://ipfs.io/ipfs/"+ipfsHash[0].path;
             console.log(path);
             this.setState({path : ipfsHash[0].path});
-            contract.methods.addData(this.state.path,digitalSignature,this.state.receiverAddress).send({from:accounts[0]});
-        })
+            contract.methods.addData(this.state.path,digitalSignature,this.state.receiverAddress,accounts[0]).send({from:accounts[0]});
+            
         
+        })
         
     };
     checkKey = async() => {
         const {accounts,contract} = this.state;
-        const keyStatus = await contract.methods.checkPublicKey().call();
+        const keyStatus = await contract.methods.checkPublicKey(accounts[0]).call();
         this.setState({keyStatus:keyStatus})
         console.log(keyStatus);
         
@@ -129,13 +135,14 @@ class CertificateGeneration extends React.Component {
     onSubmitGenerate = async(event) => {
         event.preventDefault();
         const {accounts,contract} = this.state;
-        if(this.state.keyStatus === false)
+        console.log("here")
+        if(this.state.keyStatus == 0)
         {
             var keypair = new NodeRSA({b:512});
             this.setState({privateKey : keypair.exportKey('private')});
             console.log(this.state.privateKey);
             console.log(keypair.exportKey('public'));
-            await contract.methods.addPublicKey(keypair.exportKey('public')).send({from:accounts[0]});
+            await contract.methods.addPublicKey(keypair.exportKey('public'),accounts[0]).send({from:accounts[0]});
             
 
         }
@@ -144,19 +151,37 @@ class CertificateGeneration extends React.Component {
     }
     getReceiversAddress = async(event)=>{
         event.preventDefault();
+        const {accounts,contract} = this.state;
+
         this.setState({receiverAddress : event.target.value});
         console.log(this.state.receiverAddress);
+        var data ;
+             contract.methods.getLinks(accounts[0]).call().then(res => {
+                 console.log(res)
+             });
+           console.log(data);
     }
     getIssuerPrivateKey =  async(event)=>
     {
+        const {accounts,contract} = this.state;
         event.preventDefault();
         this.setState({issuerPrivateKey: event.target.value});
         console.log(this.state.issuerPrivateKey);
-
-    }
+        var publickey = await contract.methods.getPublicKey(accounts[0]).call();
+        var key = new NodeRSA(this.state.issuerPrivateKey);
+        var publickeyoe = key.exportKey('public');
+        if(publickey === publickeyoe)
+        {
+            this.setState({keyMatch:true});
+        }
+        else{
+            this.setState({keyMatch:"not your privatekey"});
+        }
+        console.log(this.state.keyMatch);
+        }
 
     render() {
-        if(this.state.keyStatus)
+        if(this.state.keyStatus == 1)
         {
             return (
                 <div className="content">

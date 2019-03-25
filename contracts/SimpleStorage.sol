@@ -8,16 +8,19 @@ contract SimpleStorage {
     string digitalSignature;
   }
   mapping(address => string) publicKey;
-  function checkPublicKey() public view returns (bool) {
+  function checkPublicKey(address a) public view returns (uint) {
 
-    if(bytes(publicKey[msg.sender]).length ==0)
+    if(bytes(publicKey[a]).length ==0)
     {
-      return false;
+      return 0;
     }
     else
     {
-      return true;
+      return 1;
     }
+  }
+  function getPublicKey(address a) public view returns (string memory){
+    return publicKey[a];
   }
   
   //mapping (string => string) digitalSignature;
@@ -34,26 +37,26 @@ contract SimpleStorage {
         addressLink[add].push(link);
   }
   mapping(string=> Data) data;
-  function addData(string memory link,string memory digitalSignature,address to) public
+  function addData(string memory link,string memory digitalSignature,address to,address a) public
   {
-    data[link].from=msg.sender;
+    data[link].from=a;
     data[link].to=to;
     data[link].digitalSignature=digitalSignature;
     addAddressLink(to,link);
   }
-  function getLinks() public view returns (string[] memory)
+  function getLinks(address a) public view returns (string[] memory)
   {
-    return addressLink[msg.sender];
+    return addressLink[a];
   }
-  function addPublicKey(string memory key) public {
-    bool check = checkPublicKey();
-    if(check == true)
+  function addPublicKey(string memory key,address a) public {
+    uint check = checkPublicKey(a);
+    if(check == 1)
     {
 
     }
     else
     {
-      publicKey[msg.sender] = key;
+      publicKey[a] = key;
     }
   }
   
