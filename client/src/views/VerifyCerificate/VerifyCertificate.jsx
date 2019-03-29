@@ -25,37 +25,36 @@ class CertificateVerification extends React.Component {
         fileName: 'Select Certificate',
         fileType: '',
         fileExt: '',
-        status:''
+        status: ''
     }
-    componentDidMount = async ()=>
-    {
+    componentDidMount = async () => {
         try {
             //   // Get network provider and web3 instance.
-               const web3 = await getWeb3();
-                console.log('idhar hich hai apun');
+            const web3 = await getWeb3();
+            console.log('idhar hich hai apun');
             //   // Use web3 to get the user's accounts.
-               const accounts = await web3.eth.getAccounts();
-                console.log(accounts)
-              const networkId = await web3.eth.net.getId();
-              console.log(networkId);
-               const deployedNetwork = SimpleStorageContract.networks[networkId];
-              const instance = new web3.eth.Contract(
-                 SimpleStorageContract.abi,
-                 deployedNetwork && deployedNetwork.address,
-              );
-              
+            const accounts = await web3.eth.getAccounts();
+            console.log(accounts)
+            const networkId = await web3.eth.net.getId();
+            console.log(networkId);
+            const deployedNetwork = SimpleStorageContract.networks[networkId];
+            const instance = new web3.eth.Contract(
+                SimpleStorageContract.abi,
+                deployedNetwork && deployedNetwork.address,
+            );
+
             //   // Set web3, accounts, and contract to the state, and then proceed with an
             //   // example of interacting with the contract's methods.
-               this.setState({ web3, accounts, contract: instance },this.checkKey);
-               
-              //  
-             } catch (error) {
+            this.setState({ web3, accounts, contract: instance }, this.checkKey);
+
+            //  
+        } catch (error) {
             //   // Catch any errors for any of the above operations.
             alert(
                 `Failed to load web3, accounts, or contract. Check console for details.`,
-              );
+            );
             console.log('called');
-            }
+        }
     };
 
     captureFile = (event) => {
@@ -84,40 +83,38 @@ class CertificateVerification extends React.Component {
 
     onSubmit = async (event) => {
         event.preventDefault();
-        const {accounts,contract} = this.state;
+        const { accounts, contract } = this.state;
 
-        ipfs.add(this.state.buffer,(err,ipfsHash)=>{
+        ipfs.add(this.state.buffer, (err, ipfsHash) => {
             console.log(ipfsHash[0].path);
-            this.setState({fileHash: ipfsHash[0].path},this.verify);
-            
+            this.setState({ fileHash: ipfsHash[0].path }, this.verify);
+
         })
 
     };
-    verify = async () =>
-    {
-        
-        const {accounts,contract} = this.state;
+    verify = async () => {
+
+        const { accounts, contract } = this.state;
         console.log(this.state.fileHash);
-            var digitalSignature = await contract.methods.getDigitalSignature(this.state.fileHash).call({from:accounts[0]});
-            var hash = md5(this.state.buffer);
-            var key = new NodeRSA();
-            key.importKey(this.state.publicKey,'public');
-            console.log(key.exportKey('public'));
-            console.log(digitalSignature);
-            var hashFromDigitalSignature = key.decryptPublic(digitalSignature,'utf8');
-            console.log(hash);
-            console.log(hashFromDigitalSignature);
-            if(hash === hashFromDigitalSignature)
-            {
-                this.setState({status:"verified"});
-            }
-            else{
-                this.setState({status:"forged"});
-            }
+        var digitalSignature = await contract.methods.getDigitalSignature(this.state.fileHash).call({ from: accounts[0] });
+        var hash = md5(this.state.buffer);
+        var key = new NodeRSA();
+        key.importKey(this.state.publicKey, 'public');
+        console.log(key.exportKey('public'));
+        console.log(digitalSignature);
+        var hashFromDigitalSignature = key.decryptPublic(digitalSignature, 'utf8');
+        console.log(hash);
+        console.log(hashFromDigitalSignature);
+        if (hash === hashFromDigitalSignature) {
+            this.setState({ status: "verified" });
+        }
+        else {
+            this.setState({ status: "forged" });
+        }
     }
-    getKey = async(event) =>{
+    getKey = async (event) => {
         event.preventDefault();
-        this.setState({publicKey:event.target.value});
+        this.setState({ publicKey: event.target.value });
         console.log(this.state.publicKey);
     }
 
@@ -152,7 +149,7 @@ class CertificateVerification extends React.Component {
                                                     defaultValue:
                                                         "",
                                                     placeholder: "Enter Digital Signature of the Issuer",
-                                                    onChange:this.getKey
+                                                    onChange: this.getKey
                                                 }
                                             },
                                             {
@@ -162,7 +159,7 @@ class CertificateVerification extends React.Component {
                                                     defaultValue:
                                                         "",
                                                     placeholder: "Enter Issuers Private Key",
-                                                    
+
                                                 }
                                             }
                                         ]}
@@ -174,7 +171,9 @@ class CertificateVerification extends React.Component {
                                         </div>
                                     </Row>
                                 </Form>
-                                <h1>{this.state.status}</h1>
+                                <h5 className="text-info">
+                                    {this.state.status}
+                                </h5>
                             </CardBody>
                         </Card>
                     </Col>
