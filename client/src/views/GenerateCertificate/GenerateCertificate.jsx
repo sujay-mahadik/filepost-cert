@@ -8,7 +8,7 @@ import SimpleStorageContract from "../../contracts/SimpleStorage.json";
 import ipfs from "../../utils/ipfs";
 import NodeRSA from "../../utils/rsa";
 import md5 from "../../utils/md5";
-
+import CryptoJS from "../../utils/crypto";
 
 class CertificateGeneration extends React.Component {
     state = {
@@ -139,12 +139,14 @@ class CertificateGeneration extends React.Component {
         if(this.state.keyStatus == 0)
         {
             var keypair = new NodeRSA({b:512});
-            this.setState({privateKey : keypair.exportKey('private')});
-            console.log(this.state.privateKey);
-            console.log(keypair.exportKey('public'));
-            await contract.methods.addPublicKey(keypair.exportKey('public'),accounts[0]).send({from:accounts[0]});
+            
+            //console.log(this.state.privateKey);
             
 
+            await contract.methods.addPublicKey(keypair.exportKey('public'),accounts[0]).send({from:accounts[0]});
+            this.setState({privateKey : keypair.exportKey('private')});
+            var cipherKey = CryptoJS.AES.encrypt(this.state.privateKey, this.state.password);
+            console.log(cipherKey);
         }
         
 
@@ -178,7 +180,12 @@ class CertificateGeneration extends React.Component {
             this.setState({keyMatch:"not your privatekey"});
         }
         console.log(this.state.keyMatch);
-        }
+    }
+    getPassword = async(event) =>
+    {
+        event.preventDefault();
+        this.setState({password : event.target.value});
+    }
 
     render() {
         if(this.state.keyStatus == 1)
@@ -259,6 +266,7 @@ class CertificateGeneration extends React.Component {
                                 <CardBody>
                                     <h1>You haven't Generated a KeyPair yet</h1>
                                     <Form onSubmit={this.onSubmitGenerate}>
+                                    
                                         <Button type='submit' color='primary' round>Generate keypair</Button>
                                     </Form>
                                     <h1>{this.state.privateKey}</h1>
