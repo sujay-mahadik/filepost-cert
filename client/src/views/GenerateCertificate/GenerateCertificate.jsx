@@ -106,11 +106,8 @@ class CertificateGeneration extends React.Component {
         //key.importKey('-----BEGIN PUBLIC KEY-----MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALp+eZTC0q9CqLYCU1z3uOpWjbINFyORAsU7HccJy1ln/cH1+6JLuxrF85X9THyHp0cNLEeB8O8shBADi9Ig96ECAwEAAQ==-----END PUBLIC KEY-----','public')
         //var has = key.decryptPublic(digitalSignature, 'utf8');
         //console.log(has);
-        var data;
-        contract.methods.getLinks(accounts[0]).call().then(res => {
-            console.log(res)
-        });
-        console.log(data);
+        
+        //console.log(data);
         await ipfs.add(this.state.buffer, (err, ipfsHash) => {
             console.log(ipfsHash);
             const path = "http://ipfs.io/ipfs/" + ipfsHash[0].path;
@@ -135,17 +132,19 @@ class CertificateGeneration extends React.Component {
         event.preventDefault();
         const { accounts, contract } = this.state;
         console.log("here")
-        if (this.state.keyStatus == 0) {
+        if (this.state.keyStatus == false) {
             var keypair = new NodeRSA({ b: 512 });
 
-            //console.log(this.state.privateKey);
-
+           
+            this.setState({ privateKey: keypair.exportKey('private') });
+            console.log(keypair.exportKey('public'));
+            console.log(this.state.privateKey); 
 
             await contract.methods.addPublicKey(keypair.exportKey('public'), accounts[0]).send({ from: accounts[0] });
-            this.setState({ privateKey: keypair.exportKey('private') });
+            
             // var cipherKey = CryptoJS.AES.encrypt(this.state.privateKey, this.state.password);
             // console.log(cipherKey);
-            console.log(keypair.exportKey('public'));
+            
         }
 
 
@@ -237,6 +236,12 @@ class CertificateGeneration extends React.Component {
                                                 <Button type="submit" color="primary" round>Generate Certificate</Button>
                                             </div>
                                         </Row>
+
+                                        <blockquote>
+                                        <p className="blockquote blockquote-primary">
+                                        <a target='_blank' href={`https://ipfs.io/ipfs/${this.state.path}`} > {this.state.path}</a>
+                                        </p>
+                                    </blockquote>
                                     </Form>
 
                                 </CardBody>

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.6;
 pragma experimental ABIEncoderV2;
 
 contract SimpleStorage {
@@ -8,15 +8,15 @@ contract SimpleStorage {
     string digitalSignature;
   }
   mapping(address => string) publicKey;
-  function checkPublicKey(address a) public view returns (uint) {
+  function checkPublicKey(address a) public view returns (bool) {
 
     if(bytes(publicKey[a]).length ==0)
     {
-      return 0;
+      return false;
     }
     else
     {
-      return 1;
+      return true;
     }
   }
   function getPublicKey(address a) public view returns (string memory){
@@ -44,13 +44,14 @@ contract SimpleStorage {
     data[link].digitalSignature=digitalSignature;
     addAddressLink(to,link);
   }
-  function getLinks(address a) public view returns (string[] memory)
+  function getLinks(address a) public view returns (string[] memory arr)
   {
-    return addressLink[a];
+    arr = addressLink[a];
+    return arr;
   }
   function addPublicKey(string memory key,address a) public {
-    uint check = checkPublicKey(a);
-    if(check == 1)
+    bool check = checkPublicKey(a);
+    if(check == true)
     {
 
     }

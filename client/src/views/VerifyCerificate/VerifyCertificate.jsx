@@ -143,12 +143,12 @@ class CertificateVerification extends React.Component {
                                         ncols={["col-md-6 pr-1"]}
                                         proprieties={[
                                             {
-                                                label: "Digital Signature",
+                                                label: "Public Key",
                                                 inputProps: {
                                                     type: "textarea",
                                                     defaultValue:
                                                         "",
-                                                    placeholder: "Enter Digital Signature of the Issuer",
+                                                    placeholder: "Enter Public Key of the Issuer",
                                                     onChange: this.getKey
                                                 }
                                             },
