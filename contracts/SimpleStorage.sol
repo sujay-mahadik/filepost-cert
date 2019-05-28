@@ -7,10 +7,17 @@ contract SimpleStorage {
     address to;
     string digitalSignature;
   }
-  mapping(address => string) publicKey;
+  struct identity{
+    string pubkey;
+    string name;
+  }
+  string[] public namearr;
+
+  address[] public addressarr;
+  mapping(address => identity) publicKey;
   function checkPublicKey(address a) public view returns (bool) {
 
-    if(bytes(publicKey[a]).length ==0)
+    if(bytes(publicKey[a].pubkey).length == 0)
     {
       return false;
     }
@@ -20,16 +27,12 @@ contract SimpleStorage {
     }
   }
   function getPublicKey(address a) public view returns (string memory){
-    return publicKey[a];
+    return publicKey[a].pubkey;
   }
-  
-  //mapping (string => string) digitalSignature;
-  //function storeDigitalSignature(string memory link,string memory signature) public {
-  //  digitalSignature[link] = signature;
-  //}
-  function getDigitalSignature(string memory link) public view returns (string memory)
+ 
+  function getDigitalSignature(string memory link) public view returns (string memory,address)
   {
-     return data[link].digitalSignature;
+     return (data[link].digitalSignature,data[link].from);
   }
 
   mapping(address => string[]) addressLink;
@@ -39,9 +42,9 @@ contract SimpleStorage {
   mapping(string=> Data) data;
   function addData(string memory link,string memory digitalSignature,address to,address a) public
   {
-    data[link].from=a;
-    data[link].to=to;
-    data[link].digitalSignature=digitalSignature;
+    data[link].from = a;
+    data[link].to = to;
+    data[link].digitalSignature = digitalSignature;
     addAddressLink(to,link);
   }
   function getLinks(address a) public view returns (string[] memory arr)
@@ -49,7 +52,7 @@ contract SimpleStorage {
     arr = addressLink[a];
     return arr;
   }
-  function addPublicKey(string memory key,address a) public {
+  function addPublicKey(string memory key,address a,string memory name) public {
     bool check = checkPublicKey(a);
     if(check == true)
     {
@@ -57,8 +60,24 @@ contract SimpleStorage {
     }
     else
     {
-      publicKey[a] = key;
+      publicKey[a].pubkey = key;
+      publicKey[a].name = name;
+      namearr.push(name);
+      addressarr.push(a);
+
     }
+  }
+  function getName(address add) public view returns(string memory name){
+    return publicKey[add].name;
+  }
+  function getAllUsersName() public view returns(string[] memory)
+  {
+    return namearr;
+
+  }
+  function getAllUsersAdd() public view returns(address[] memory)
+  {
+    return addressarr;
   }
   
 }

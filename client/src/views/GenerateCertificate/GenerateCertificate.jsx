@@ -140,7 +140,7 @@ class CertificateGeneration extends React.Component {
             console.log(keypair.exportKey('public'));
             console.log(this.state.privateKey); 
 
-            await contract.methods.addPublicKey(keypair.exportKey('public'), accounts[0]).send({ from: accounts[0] });
+            await contract.methods.addPublicKey(keypair.exportKey('public'), accounts[0],"this.state.name").send({ from: accounts[0] });
             
             // var cipherKey = CryptoJS.AES.encrypt(this.state.privateKey, this.state.password);
             // console.log(cipherKey);
