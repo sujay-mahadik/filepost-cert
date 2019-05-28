@@ -139,8 +139,8 @@ class CertificateGeneration extends React.Component {
             this.setState({ privateKey: keypair.exportKey('private') });
             console.log(keypair.exportKey('public'));
             console.log(this.state.privateKey); 
-
-            await contract.methods.addPublicKey(keypair.exportKey('public'), accounts[0],"this.state.name").send({ from: accounts[0] });
+            
+            await contract.methods.addPublicKey(keypair.exportKey('public'), accounts[0],this.state.senderName).send({ from: accounts[0] });
             
             // var cipherKey = CryptoJS.AES.encrypt(this.state.privateKey, this.state.password);
             // console.log(cipherKey);
@@ -177,9 +177,9 @@ class CertificateGeneration extends React.Component {
         }
         console.log(this.state.keyMatch);
     }
-    getPassword = async (event) => {
+     getSenderName = async (event) => {
         event.preventDefault();
-        this.setState({ password: event.target.value });
+        this.setState({ senderName: event.target.value });
     }
 
     render() {
@@ -265,6 +265,21 @@ class CertificateGeneration extends React.Component {
                                 <CardBody>
                                     <h6>You haven't Generated a KeyPair yet</h6>
                                     <Form onSubmit={this.onSubmitGenerate}>
+                                    <FormInputs
+                                            ncols={["col-md-6 pr-1"]}
+                                            proprieties={[
+                                                {
+                                                    label: "Organization Name",
+                                                    inputProps: {
+                                                        type: "textarea",
+                                                        defaultValue:
+                                                            "",
+                                                        placeholder: "Organization Name",
+                                                        onChange: this.getSenderName
+                                                    }
+                                                }
+                                            ]}
+                                        />
                                         <Button type='submit' color='primary' round>Generate keypair</Button>
                                     </Form>
                                     <h1></h1>

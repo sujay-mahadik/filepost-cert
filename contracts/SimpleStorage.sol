@@ -79,5 +79,15 @@ contract SimpleStorage {
   {
     return addressarr;
   }
+  function getSenderName(address a) public view returns(string memory){
+    for(uint i=0;i<=addressarr.length;i++)
+    {
+     if (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((addressarr[i]))) )
+        {
+          return namearr[i];
+        }
+    }
+  }
+  
   
 }
