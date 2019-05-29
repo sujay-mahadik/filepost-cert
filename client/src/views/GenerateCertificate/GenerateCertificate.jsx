@@ -106,7 +106,7 @@ class CertificateGeneration extends React.Component {
         //key.importKey('-----BEGIN PUBLIC KEY-----MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALp+eZTC0q9CqLYCU1z3uOpWjbINFyORAsU7HccJy1ln/cH1+6JLuxrF85X9THyHp0cNLEeB8O8shBADi9Ig96ECAwEAAQ==-----END PUBLIC KEY-----','public')
         //var has = key.decryptPublic(digitalSignature, 'utf8');
         //console.log(has);
-        
+
         //console.log(data);
         await ipfs.add(this.state.buffer, (err, ipfsHash) => {
             console.log(ipfsHash);
@@ -135,16 +135,18 @@ class CertificateGeneration extends React.Component {
         if (this.state.keyStatus == false) {
             var keypair = new NodeRSA({ b: 512 });
 
-           
+
             this.setState({ privateKey: keypair.exportKey('private') });
-            console.log(keypair.exportKey('public'));
-            console.log(this.state.privateKey); 
-            
-            await contract.methods.addPublicKey(keypair.exportKey('public'), accounts[0],this.state.senderName).send({ from: accounts[0] });
-            
+            this.setState({ publicKeyState: keypair.exportKey('public') });
+
+            // console.log(keypair.exportKey('public'));
+            // console.log(this.state.privateKey);
+
+            await contract.methods.addPublicKey(keypair.exportKey('public'), accounts[0], this.state.senderName).send({ from: accounts[0] });
+
             // var cipherKey = CryptoJS.AES.encrypt(this.state.privateKey, this.state.password);
             // console.log(cipherKey);
-            
+
         }
 
 
@@ -177,9 +179,21 @@ class CertificateGeneration extends React.Component {
         }
         console.log(this.state.keyMatch);
     }
-     getSenderName = async (event) => {
+    getSenderName = async (event) => {
         event.preventDefault();
         this.setState({ senderName: event.target.value });
+    }
+
+    downloadPrivateKey = async (toDownloadPrivatekey) => {
+        const { accounts, contract } = this.state;
+        var fileDownload = require('js-file-download');
+        fileDownload(toDownloadPrivatekey, accounts[0] + "_privatekey.txt");
+    }
+
+    downloadPublicKey = async (toDownloadPublickey) => {
+        const { accounts, contract } = this.state;
+        var fileDownload = require('js-file-download');
+        fileDownload(toDownloadPublickey, accounts[0] + "_publickey.txt");
     }
 
     render() {
@@ -238,10 +252,10 @@ class CertificateGeneration extends React.Component {
                                         </Row>
 
                                         <blockquote>
-                                        <p className="blockquote blockquote-primary">
-                                        <a target='_blank' href={`https://ipfs.io/ipfs/${this.state.path}`} > {this.state.path}</a>
-                                        </p>
-                                    </blockquote>
+                                            <p className="blockquote blockquote-primary">
+                                                <a target='_blank' href={`https://ipfs.io/ipfs/${this.state.path}`} > {this.state.path}</a>
+                                            </p>
+                                        </blockquote>
                                     </Form>
 
                                 </CardBody>
@@ -265,7 +279,7 @@ class CertificateGeneration extends React.Component {
                                 <CardBody>
                                     <h6>You haven't Generated a KeyPair yet</h6>
                                     <Form onSubmit={this.onSubmitGenerate}>
-                                    <FormInputs
+                                        <FormInputs
                                             ncols={["col-md-6 pr-1"]}
                                             proprieties={[
                                                 {
@@ -288,6 +302,22 @@ class CertificateGeneration extends React.Component {
                                             {this.state.privateKey}
                                         </p>
                                     </blockquote>
+                                    {this.state.privateKey ? (
+                                        <div className="update ml-auto mr-auto">
+                                            <Button onClick={this.downloadPrivateKey.bind(this, this.state.privateKey)} type="submit" color="primary" round>Download Private Key</Button>
+                                        </div>
+
+                                    ) : ""
+
+                                    }
+                                    {this.state.publicKeyState ? (
+                                        <div className="update ml-auto mr-auto">
+                                            <Button onClick={this.downloadPublicKey.bind(this, this.state.publicKeyState)} type="submit" color="primary" round>Download Public Key</Button>
+                                        </div>
+
+                                    ) : ""
+
+                                    }
                                 </CardBody>
                             </Card>
                         </Col>

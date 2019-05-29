@@ -7,6 +7,7 @@ import Maps from "views/Maps/Maps.jsx";
 import UserPage from "views/UserPage/UserPage.jsx";
 import CertificateGeneration from "views/GenerateCertificate/GenerateCertificate.jsx";
 import CertificateVerification from "views/VerifyCerificate/VerifyCertificate.jsx";
+import CertificateList from "views/CertificateList/CertificateList.jsx";
 
 var dashRoutes = [
   // {
@@ -47,10 +48,10 @@ var dashRoutes = [
     component: UserPage
   },
   {
-    path: "/certificates",
-    name: "Certificates",
+    path: "/certificate-list",
+    name: "Certificate List",
     icon: "nc-icon nc-tile-56",
-    component: TableList
+    component: CertificateList
   },
   // {
   //   path: "/typography",

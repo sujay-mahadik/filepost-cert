@@ -75,9 +75,9 @@ class CertificateVerification extends React.Component {
     };
 
     convertToBuffer = async (reader) => {
-        
+
         const buffer = await Buffer.from(reader.result);
-        
+
         this.setState({ buffer });
     };
 
@@ -95,17 +95,17 @@ class CertificateVerification extends React.Component {
     verify = async () => {
 
         const { accounts, contract } = this.state;
-        
-       var ff = await contract.methods.getAllUsersName().call({from:accounts[0]});
-       console.log(ff);
-       ff=  await contract.methods.getAllUsersAdd().call({from:accounts[0]});
-       console.log(ff);
+
+        var ff = await contract.methods.getAllUsersName().call({ from: accounts[0] });
+        console.log(ff);
+        ff = await contract.methods.getAllUsersAdd().call({ from: accounts[0] });
+        console.log(ff);
         console.log(this.state.fileHash);
         var digitalSignature = await contract.methods.getDigitalSignature(this.state.fileHash).call({ from: accounts[0] });
-        console.log(digitalSignature[0],digitalSignature[1]);
+        console.log(digitalSignature[0], digitalSignature[1]);
         var hash = md5(this.state.buffer);
-        var name = await contract.methods.getName(digitalSignature[1]).call({from :accounts[0]});
-        this.setState({name});
+        var name = await contract.methods.getName(digitalSignature[1]).call({ from: accounts[0] });
+        this.setState({ name });
         var key = new NodeRSA();
         key.importKey(this.state.publicKey, 'public');
         console.log(key.exportKey('public'));
@@ -114,7 +114,7 @@ class CertificateVerification extends React.Component {
         console.log(hash);
         console.log(hashFromDigitalSignature);
         if (hash === hashFromDigitalSignature) {
-            this.setState({ status: "verified"+name });
+            this.setState({ status: "verified" + name });
         }
         else {
             this.setState({ status: "forged" });
@@ -181,7 +181,7 @@ class CertificateVerification extends React.Component {
                                 </Form>
                                 <h5 className="text-info">
                                     {this.state.status}
-                                    
+
                                 </h5>
                             </CardBody>
                         </Card>
