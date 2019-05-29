@@ -25,7 +25,11 @@ class CertificateVerification extends React.Component {
         fileName: 'Select Certificate',
         fileType: '',
         fileExt: '',
-        status: ''
+        status: '',
+        issuerName: [],
+        issuerAddress: [],
+        selectedIssuer: '',
+        selectedIssuerStatus: ''
     }
     constructor(props, context) {
         super(props, context);
@@ -33,14 +37,25 @@ class CertificateVerification extends React.Component {
         // Now "openArticleDetailsScreen" has "ArticleListScreen" instance as "this"
         // no matter how the method/function is called.
     }
+
+    getIssuerNames = async () => {
+        const { accounts, contract } = this.state;
+
+        var ff = await contract.methods.getAllUsersName().call({ from: accounts[0] });
+        this.setState({ issuerName: ff });
+        //console.log(this.state.issuerName);
+        ff = await contract.methods.getAllUsersAdd().call({ from: accounts[0] });
+        this.setState({ issuerAddress: ff });
+        //console.log(this.state.issuerAddress);
+    }
     componentDidMount = async () => {
 
 
-        
+
         try {
             //   // Get network provider and web3 instance.
             const web3 = await getWeb3();
-            console.log('idhar hich hai apun');
+            //console.log('idhar hich hai apun');
             //   // Use web3 to get the user's accounts.
             const accounts = await web3.eth.getAccounts();
             console.log(accounts)
@@ -55,6 +70,7 @@ class CertificateVerification extends React.Component {
             //   // Set web3, accounts, and contract to the state, and then proceed with an
             //   // example of interacting with the contract's methods.
             this.setState({ web3, accounts, contract: instance }, this.checkKey);
+            this.getIssuerNames();
 
             //  
         } catch (error) {
@@ -99,23 +115,22 @@ class CertificateVerification extends React.Component {
         event.preventDefault();
         const { accounts, contract } = this.state;
 
-        if(this.state.Link)
-        {
-            this.setState({fileHash:this.state.Link});
-            fetch('https://ipfs.io/ipfs/'+this.state.Link).then(response=>response.text()).then(data=>this.setState({oebuffer:data},this.verify));
-            }
-      
-                // Examine the text in the response
-                
-        
+        if (this.state.Link) {
+            this.setState({ fileHash: this.state.Link });
+            fetch('https://ipfs.io/ipfs/' + this.state.Link).then(response => response.text()).then(data => this.setState({ oebuffer: data }, this.verify));
+        }
 
-          // Examine the text in the response
-          
-        
-        else{
-            this.setState({fileHash:this.state.upload})
-            
-            this.setState({oebuffer:this.state.buffer},this.verify)
+        // Examine the text in the response
+
+
+
+        // Examine the text in the response
+
+
+        else {
+            this.setState({ fileHash: this.state.upload })
+
+            this.setState({ oebuffer: this.state.buffer }, this.verify)
         }
 
     };
@@ -128,12 +143,12 @@ class CertificateVerification extends React.Component {
         ff = await contract.methods.getAllUsersAdd().call({ from: accounts[0] });
         console.log(ff);
         console.log(this.state.oebuffer.data)
-        var hash =md5(this.state.oebuffer);
-        
-        
+        var hash = md5(this.state.oebuffer);
+
+
         var digitalSignature = await contract.methods.getDigitalSignature(this.state.fileHash).call({ from: accounts[0] });
         console.log(digitalSignature[0], digitalSignature[1]);
-        
+
         var name = await contract.methods.getName(digitalSignature[1]).call({ from: accounts[0] });
         this.setState({ name });
         var key = new NodeRSA();
@@ -181,21 +196,21 @@ class CertificateVerification extends React.Component {
                                         </label>
                                         <input id="file-input" type="file" style={{ display: 'none' }} onChange={this.captureFile} />
                                         <FormInputs
-                                        ncols={["col-md-6 pr-1"]}
-                                        proprieties={[
-                                            
-                                            {
-                                                label: "IPFS Link to the Certificate",
-                                                inputProps: {
-                                                    type: "textarea",
-                                                    defaultValue:
-                                                        "",
-                                                    placeholder: "Link to IPFS Certificate or Hash of file",
-                                                    onChange:this.getLink
+                                            ncols={["col-md-6 pr-1"]}
+                                            proprieties={[
+
+                                                {
+                                                    label: "IPFS Link to the Certificate",
+                                                    inputProps: {
+                                                        type: "textarea",
+                                                        defaultValue:
+                                                            "",
+                                                        placeholder: "Link to IPFS Certificate or Hash of file",
+                                                        onChange: this.getLink
+                                                    }
                                                 }
-                                            }
-                                        ]}
-                                    />
+                                            ]}
+                                        />
                                     </div>
                                     <br />
                                     <FormInputs
@@ -213,7 +228,14 @@ class CertificateVerification extends React.Component {
                                             }
                                         ]}
                                     />
-
+                                    <select
+                                        onChange={(e) => this.setState({ selectedIssuer: e.target.value, selectedIssuerStatus: e.target.value === "" ? "You must select a Issuer" : "" })} >
+                                        {this.state.issuerName.map((issuer, key) => <option key={key} value={issuer}>{issuer}</option>)}
+                                    </select>
+                                    <h5 className="text-warning">
+                                        {this.state.selectedIssuerStatus}
+                                    </h5>
+                                    {console.log(this.state.selectedIssuer)}
                                     <Row>
                                         <div className="update ml-auto mr-auto">
                                             <Button type="submit" color="primary" round>Verify Certificate</Button>
