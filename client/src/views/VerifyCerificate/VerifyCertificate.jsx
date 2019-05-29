@@ -27,7 +27,16 @@ class CertificateVerification extends React.Component {
         fileExt: '',
         status: ''
     }
+    constructor(props, context) {
+        super(props, context);
+        // Binding "this" creates new function with explicitly defined "this"
+        // Now "openArticleDetailsScreen" has "ArticleListScreen" instance as "this"
+        // no matter how the method/function is called.
+    }
     componentDidMount = async () => {
+
+
+        
         try {
             //   // Get network provider and web3 instance.
             const web3 = await getWeb3();
@@ -79,17 +88,35 @@ class CertificateVerification extends React.Component {
         const buffer = await Buffer.from(reader.result);
 
         this.setState({ buffer });
+        ipfs.add(this.state.buffer, (err, ipfsHash) => {
+            console.log(ipfsHash[0].path);
+            this.setState({ upload: ipfsHash[0].path });
+
+        })
     };
 
     onSubmit = async (event) => {
         event.preventDefault();
         const { accounts, contract } = this.state;
 
-        ipfs.add(this.state.buffer, (err, ipfsHash) => {
-            console.log(ipfsHash[0].path);
-            this.setState({ fileHash: ipfsHash[0].path }, this.verify);
+        if(this.state.Link)
+        {
+            this.setState({fileHash:this.state.Link});
+            fetch('https://ipfs.io/ipfs/'+this.state.Link).then(response=>response.text()).then(data=>this.setState({oebuffer:data},this.verify));
+            }
+      
+                // Examine the text in the response
+                
+        
 
-        })
+          // Examine the text in the response
+          
+        
+        else{
+            this.setState({fileHash:this.state.upload})
+            
+            this.setState({oebuffer:this.state.buffer},this.verify)
+        }
 
     };
     verify = async () => {
@@ -100,10 +127,13 @@ class CertificateVerification extends React.Component {
         console.log(ff);
         ff = await contract.methods.getAllUsersAdd().call({ from: accounts[0] });
         console.log(ff);
-        console.log(this.state.fileHash);
+        console.log(this.state.oebuffer.data)
+        var hash =md5(this.state.oebuffer);
+        
+        
         var digitalSignature = await contract.methods.getDigitalSignature(this.state.fileHash).call({ from: accounts[0] });
         console.log(digitalSignature[0], digitalSignature[1]);
-        var hash = md5(this.state.buffer);
+        
         var name = await contract.methods.getName(digitalSignature[1]).call({ from: accounts[0] });
         this.setState({ name });
         var key = new NodeRSA();
@@ -114,7 +144,7 @@ class CertificateVerification extends React.Component {
         console.log(hash);
         console.log(hashFromDigitalSignature);
         if (hash === hashFromDigitalSignature) {
-            this.setState({ status: "verified" + name });
+            this.setState({ status: "The Certifiacate is Verified and issued by " + name });
         }
         else {
             this.setState({ status: "forged" });
@@ -124,6 +154,11 @@ class CertificateVerification extends React.Component {
         event.preventDefault();
         this.setState({ publicKey: event.target.value });
         console.log(this.state.publicKey);
+    }
+    getLink = async (event) => {
+        event.preventDefault();
+        this.setState({ Link: event.target.value });
+        console.log(this.state.Link);
     }
 
     render() {
@@ -145,6 +180,22 @@ class CertificateVerification extends React.Component {
 
                                         </label>
                                         <input id="file-input" type="file" style={{ display: 'none' }} onChange={this.captureFile} />
+                                        <FormInputs
+                                        ncols={["col-md-6 pr-1"]}
+                                        proprieties={[
+                                            
+                                            {
+                                                label: "IPFS Link to the Certificate",
+                                                inputProps: {
+                                                    type: "textarea",
+                                                    defaultValue:
+                                                        "",
+                                                    placeholder: "Link to IPFS Certificate or Hash of file",
+                                                    onChange:this.getLink
+                                                }
+                                            }
+                                        ]}
+                                    />
                                     </div>
                                     <br />
                                     <FormInputs
@@ -158,16 +209,6 @@ class CertificateVerification extends React.Component {
                                                         "",
                                                     placeholder: "Enter Public Key of the Issuer",
                                                     onChange: this.getKey
-                                                }
-                                            },
-                                            {
-                                                label: "Issuers public Key",
-                                                inputProps: {
-                                                    type: "textarea",
-                                                    defaultValue:
-                                                        "",
-                                                    placeholder: "Enter Issuers Private Key",
-
                                                 }
                                             }
                                         ]}
