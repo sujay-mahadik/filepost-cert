@@ -31,13 +31,7 @@ class CertificateVerification extends React.Component {
         selectedIssuer: '',
         selectedIssuerStatus: ''
     }
-    constructor(props, context) {
-        super(props, context);
-        // Binding "this" creates new function with explicitly defined "this"
-        // Now "openArticleDetailsScreen" has "ArticleListScreen" instance as "this"
-        // no matter how the method/function is called.
-    }
-
+    
     getIssuerNames = async () => {
         const { accounts, contract } = this.state;
 
@@ -113,8 +107,14 @@ class CertificateVerification extends React.Component {
 
     onSubmit = async (event) => {
         event.preventDefault();
-        const { accounts, contract } = this.state;
-
+    const { accounts, contract } = this.state;
+       var index =  this.state.issuerName.indexOf(this.state.selectedIssuer)
+       var add = this.state.issuerAddress[index];
+       console.log(index);
+       console.log(add);
+       var publickk  =await contract.methods.getPublicKey(add).call({from:accounts[0]});
+       console.log(publickk);
+       this.setState({publicKey:publickk});
         if (this.state.Link) {
             this.setState({ fileHash: this.state.Link });
             fetch('https://ipfs.io/ipfs/' + this.state.Link).then(response => response.text()).then(data => this.setState({ oebuffer: data }, this.verify));
@@ -155,7 +155,14 @@ class CertificateVerification extends React.Component {
         key.importKey(this.state.publicKey, 'public');
         console.log(key.exportKey('public'));
         console.log(digitalSignature);
-        var hashFromDigitalSignature = key.decryptPublic(digitalSignature[0], 'utf8');
+        var hashFromDigitalSignature = "zzz";
+        try{
+         hashFromDigitalSignature   = key.decryptPublic(digitalSignature[0], 'utf8');
+        }
+         catch(e)
+         {
+             console.log(e);
+         }
         console.log(hash);
         console.log(hashFromDigitalSignature);
         if (hash === hashFromDigitalSignature) {
@@ -165,11 +172,7 @@ class CertificateVerification extends React.Component {
             this.setState({ status: "forged" });
         }
     }
-    getKey = async (event) => {
-        event.preventDefault();
-        this.setState({ publicKey: event.target.value });
-        console.log(this.state.publicKey);
-    }
+    
     getLink = async (event) => {
         event.preventDefault();
         this.setState({ Link: event.target.value });
@@ -213,22 +216,9 @@ class CertificateVerification extends React.Component {
                                         />
                                     </div>
                                     <br />
-                                    <FormInputs
-                                        ncols={["col-md-6 pr-1"]}
-                                        proprieties={[
-                                            {
-                                                label: "Public Key",
-                                                inputProps: {
-                                                    type: "textarea",
-                                                    defaultValue:
-                                                        "",
-                                                    placeholder: "Enter Public Key of the Issuer",
-                                                    onChange: this.getKey
-                                                }
-                                            }
-                                        ]}
-                                    />
+                                   
                                     <select
+                                        defaultValue="Select"
                                         onChange={(e) => this.setState({ selectedIssuer: e.target.value, selectedIssuerStatus: e.target.value === "" ? "You must select a Issuer" : "" })} >
                                         {this.state.issuerName.map((issuer, key) => <option key={key} value={issuer}>{issuer}</option>)}
                                     </select>

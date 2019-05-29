@@ -13,9 +13,9 @@ contract SimpleStorage {
   }
   string[] public namearr;
 
-  address[] public addressarr;
-  mapping(address => identity) publicKey;
-  function checkPublicKey(address a) public view returns (bool) {
+  string[] public addressarr;
+  mapping(string => identity) publicKey;
+  function checkPublicKey(string memory a) public view returns (bool) {
 
     if(bytes(publicKey[a].pubkey).length == 0)
     {
@@ -26,7 +26,8 @@ contract SimpleStorage {
       return true;
     }
   }
-  function getPublicKey(address a) public view returns (string memory){
+  function getPublicKey(string memory a) public view returns (string memory){
+    
     return publicKey[a].pubkey;
   }
  
@@ -52,7 +53,7 @@ contract SimpleStorage {
     arr = addressLink[a];
     return arr;
   }
-  function addPublicKey(string memory key,address a,string memory name) public {
+  function addPublicKey(string memory key,string memory a,string memory name) public {
     bool check = checkPublicKey(a);
     if(check == true)
     {
@@ -67,7 +68,7 @@ contract SimpleStorage {
 
     }
   }
-  function getName(address add) public view returns(string memory name){
+  function getName(string memory add) public view returns(string memory name){
     return publicKey[add].name;
   }
   function getAllUsersName() public view returns(string[] memory)
@@ -75,19 +76,11 @@ contract SimpleStorage {
     return namearr;
 
   }
-  function getAllUsersAdd() public view returns(address[] memory)
+  function getAllUsersAdd() public view returns(string[] memory)
   {
     return addressarr;
   }
-  function getSenderName(address a) public view returns(string memory){
-    for(uint i=0;i<=addressarr.length;i++)
-    {
-     if (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((addressarr[i]))) )
-        {
-          return namearr[i];
-        }
-    }
-  }
+  
   
   
 }
